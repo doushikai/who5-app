@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>利用者満足度調査（WHO-5）</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap');
+
+  :root{
+    --bg: #F2F6F1;
+    --card: #FFFFFF;
+    --pine: #33544A;
+    --pine-dark: #223A32;
+    --pine-soft: #E4EDE6;
+    --gold: #B9812F;
+    --gold-soft: #F5E8D2;
+    --ink: #223027;
+    --ink-muted: #6B776E;
+    --line: #DCE4DC;
+    --danger: #A24A3B;
+    --radius: 18px;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--bg);
+    font-family:'Noto Sans JP', sans-serif;
+    color: var(--ink);
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    padding: 28px 16px 60px;
+  }
+  .app{ width:100%; max-width: 520px; }
+  .masthead{ text-align:center; margin-bottom: 22px; }
+  .masthead .facility{
+    font-family:'Zen Maru Gothic', sans-serif; font-weight:700; font-size: 15px; color: var(--pine); letter-spacing: .02em;
+  }
+  .masthead .title{
+    font-family:'Zen Maru Gothic', sans-serif; font-weight:900; font-size: 26px; color: var(--ink); margin-top: 4px;
+  }
+  .card{
+    background: var(--card); border-radius: var(--radius); padding: 26px 22px;
+    box-shadow: 0 2px 0 var(--line); border: 1px solid var(--line);
+  }
+  .screen{ display:none; animation: fadein .22s ease; }
+  .screen.active{ display:block; }
+  @keyframes fadein{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);} }
+
+  .big-btn{
+    display:flex; align-items:center; justify-content:center; width:100%;
+    padding: 22px 18px; margin-bottom: 14px; border-radius: 14px; border: 2px solid var(--pine-soft);
+    background: var(--pine-soft); color: var(--pine-dark); font-family:'Zen Maru Gothic', sans-serif;
+    font-weight: 700; font-size: 19px; cursor:pointer; text-align:center; line-height: 1.5;
+    transition: background .12s ease, transform .08s ease;
+  }
+  .big-btn:active{ transform: scale(0.98); }
+  .big-btn:hover{ background: #D7E5D9; }
+  .big-btn.gold{ background: var(--gold-soft); border-color: var(--gold-soft); color: #6B4A18; }
+  .big-btn.gold:hover{ background: #EEDBB3; }
+  .big-btn.outline{ background: var(--card); border-color: var(--line); color: var(--ink); font-weight: 500; font-size: 17px; padding: 16px; }
+  .big-btn.outline:hover{ background: var(--pine-soft); }
+  .big-btn.selected{ background: var(--pine); border-color: var(--pine); color: #fff; }
+  .big-btn.small{ padding: 14px; font-size: 16px; margin-bottom: 10px; }
+
+  .step-label{ font-size: 13px; color: var(--ink-muted); margin-bottom: 6px; font-weight:500; }
+  .progress-wrap{ height: 8px; background: var(--pine-soft); border-radius: 999px; overflow:hidden; margin-bottom: 22px; }
+  .progress-bar{ height:100%; background: var(--pine); border-radius: 999px; transition: width .25s ease; }
+  .question{ font-family:'Zen Maru Gothic', sans-serif; font-weight: 700; font-size: 21px; line-height: 1.6; color: var(--ink); margin-bottom: 20px; }
+  .question .sub{ display:block; font-family:'Noto Sans JP', sans-serif; font-weight:400; font-size:13px; color:var(--ink-muted); margin-top:6px; }
+  .nav-row{ display:flex; justify-content: space-between; align-items:center; margin-bottom: 16px; }
+  .home-icon-btn{ background:none; border:none; color:var(--pine); font-size:14px; cursor:pointer; font-weight:500; display:flex; align-items:center; gap:4px; padding:6px 0; }
+  .link-small{ display:block; text-align:center; margin-top:16px; color: var(--ink-muted); font-size:13px; text-decoration:underline; cursor:pointer; }
+
+  .add-resident-row{ display:flex; gap:8px; margin-top: 6px; }
+  .add-resident-row input{ flex:1; padding: 14px; border-radius: 12px; border: 2px solid var(--line); font-size:16px; font-family:'Noto Sans JP', sans-serif; }
+  .add-resident-row button{ padding: 0 18px; border-radius: 12px; border:none; background: var(--pine); color:#fff; font-weight:700; cursor:pointer; font-size:15px; }
+
+  .select-row{ display:flex; gap:10px; margin: 14px 0; }
+  .select-row select{
+    flex:1; padding: 14px; border-radius: 12px; border: 2px solid var(--line); font-size:17px; font-family:'Noto Sans JP', sans-serif; background:#fff;
+  }
+  .year-label-box{
+    background: var(--pine-soft); border-radius: 12px; padding: 14px 16px; margin-bottom: 18px;
+    font-family:'Zen Maru Gothic', sans-serif; font-weight:700; color: var(--pine-dark); font-size:15px; text-align:center;
+  }
+  .note-box{
+    background: var(--gold-soft); border-radius: 12px; padding: 14px 16px; margin-bottom: 18px; font-size:13.5px; color:#6B4A18; line-height:1.7;
+  }
+
+  .summary-box{ background: var(--pine-soft); border-radius: 14px; padding: 18px; margin-bottom: 18px; }
+  .summary-row{ display:flex; justify-content:space-between; padding: 6px 0; font-size:15px; }
+  .summary-row .label{ color: var(--ink-muted); }
+  .summary-score{ text-align:center; margin: 10px 0 4px; }
+  .summary-score .num{ font-family:'Zen Maru Gothic', sans-serif; font-weight:900; font-size: 44px; color: var(--pine); }
+  .summary-score .unit{ font-size:14px; color: var(--ink-muted); }
+
+  table{ width:100%; border-collapse: collapse; font-size: 13.5px; }
+  th, td{ padding: 9px 5px; text-align:center; border-bottom: 1px solid var(--line); white-space:nowrap; }
+  th{ color: var(--ink-muted); font-weight:500; font-size:12px; }
+  td.name{ text-align:left; font-weight:700; font-family:'Zen Maru Gothic', sans-serif; white-space:nowrap; }
+  .table-scroll{ overflow-x:auto; -webkit-overflow-scrolling:touch; margin-bottom: 6px; }
+  .empty-note{ text-align:center; color: var(--ink-muted); padding: 30px 10px; font-size:14px; line-height:1.7; }
+
+  .toast{
+    position: fixed; bottom: 24px; left:50%; transform: translateX(-50%);
+    background: var(--pine-dark); color:#fff; padding: 12px 22px; border-radius: 999px; font-size:14px;
+    opacity:0; pointer-events:none; transition: opacity .25s ease, bottom .25s ease;
+  }
+  .toast.show{ opacity:1; bottom: 34px; }
+
+  .section-title{ font-family:'Zen Maru Gothic', sans-serif; font-weight:700; font-size:16px; color: var(--pine-dark); margin: 22px 0 10px; }
+  .section-title:first-child{ margin-top:0; }
+
+  #lockScreen{
+    position: fixed; inset:0; background: var(--pine-dark); display:flex;
+    align-items:center; justify-content:center; z-index:999; padding:20px;
+  }
+  .lock-card{
+    background: var(--card); border-radius:14px; padding:30px 24px; max-width:320px; width:100%;
+    text-align:center; box-shadow: 0 4px 24px rgba(0,0,0,.25);
+  }
+  .lock-card h2{ font-family:'Zen Maru Gothic', sans-serif; font-weight:700; font-size:17px; margin:0 0 6px; color: var(--ink); }
+  .lock-card p{ font-size:13px; color: var(--ink-muted); margin:0 0 18px; }
+  .lock-card input[type=password]{
+    width:100%; border:2px solid var(--line); border-radius:10px; padding:12px; font-size:18px;
+    text-align:center; letter-spacing:4px; margin-bottom:12px; font-family:inherit; background:#FCFBF8;
+  }
+  .lock-card button{
+    width:100%; height:48px; border:none; border-radius:12px; background: var(--pine); color:#fff;
+    font-size:15px; font-weight:700; cursor:pointer;
+  }
+  .lock-error{ color: var(--danger); font-size:13px; margin-top:10px; min-height:18px; }
+</style>
+</head>
+<body>
+
+<div id="lockScreen">
+  <div class="lock-card">
+    <h2>利用者満足度調査</h2>
+    <p>コードを入力してください</p>
+    <input type="password" id="passcodeInput" inputmode="numeric" placeholder="コード">
+    <button type="button" id="unlockBtn">開く</button>
+    <div class="lock-error" id="lockError"></div>
+  </div>
+</div>
+
+<div class="app" id="appContent" style="display:none;">
+  <div class="masthead">
+    <div class="title">利用者満足度調査</div>
+  </div>
+
+  <div class="card">
+
+    <!-- ホーム画面 -->
+    <div class="screen active" id="screen-home">
+      <div class="step-label">WHO-5調査（利用者の満足度等の評価）</div>
+      <button class="big-btn" onclick="startNewEntry()">新しく入力する</button>
+      <button class="big-btn gold" onclick="renderTally(); goTo('tally')">これまでの結果を見る</button>
+      <span class="link-small" onclick="openSettings()">算定開始年月の設定・確認</span>
+    </div>
+
+    <!-- 設定画面 -->
+    <div class="screen" id="screen-settings">
+      <div class="nav-row"><span class="home-icon-btn" onclick="goTo('home')">← ホームに戻る</span></div>
+      <div class="step-label">算定開始年月の設定</div>
+      <div class="note-box">見守り機器等の導入により加算の算定を開始した年月を設定してください。この年月を基準に「第1年度」「第2年度」…を自動的に計算します。あとから変更もできます。</div>
+      <div class="select-row">
+        <select id="set-year"></select>
+        <select id="set-month"></select>
+      </div>
+      <button class="big-btn" onclick="saveSettings()">この内容で設定する</button>
+    </div>
+
+    <!-- 利用者選択 -->
+    <div class="screen" id="screen-resident">
+      <div class="nav-row"><span class="home-icon-btn" onclick="goTo('home')">← ホームに戻る</span></div>
+      <div class="step-label">対象の利用者を選んでください</div>
+      <div id="resident-list"></div>
+      <div class="add-resident-row">
+        <input type="text" id="new-resident-input" placeholder="新しい利用者名を追加（仮名可）">
+        <button onclick="addResident()">追加</button>
+      </div>
+    </div>
+
+    <!-- 実施年月選択 -->
+    <div class="screen" id="screen-implmonth">
+      <div class="nav-row"><span class="home-icon-btn" onclick="goTo('resident')">← 利用者選択に戻る</span></div>
+      <div class="step-label"><span id="im-resident-name"></span> さんの調査を実施した年月</div>
+      <div class="select-row">
+        <select id="im-year"></select>
+        <select id="im-month"></select>
+      </div>
+      <div class="year-label-box" id="im-year-label"></div>
+      <button class="big-btn" onclick="confirmImplMonth()">この年月で調査を始める</button>
+    </div>
+
+    <!-- 質問画面 -->
+    <div class="screen" id="screen-question">
+      <div class="nav-row">
+        <span class="home-icon-btn" onclick="prevQuestion()">← 戻る</span>
+        <span class="step-label" id="q-progress-text" style="margin:0;"></span>
+      </div>
+      <div class="progress-wrap"><div class="progress-bar" id="q-progress-bar" style="width:0%;"></div></div>
+      <div class="question" id="q-text"></div>
+      <div id="q-options"></div>
+    </div>
+
+    <!-- 確認画面 -->
+    <div class="screen" id="screen-confirm">
+      <div class="step-label">入力内容の確認</div>
+      <div class="summary-box">
+        <div class="summary-row"><span class="label">利用者</span><span id="c-name"></span></div>
+        <div class="summary-row"><span class="label">実施年月</span><span id="c-implymonth"></span></div>
+        <div class="summary-row"><span class="label">年度</span><span id="c-yearlabel"></span></div>
+        <div class="summary-score">
+          <div class="num" id="c-score25"></div>
+          <div class="unit">点（0〜25点満点）</div>
+        </div>
+      </div>
+      <button class="big-btn" onclick="saveRecord()">この内容で保存する</button>
+      <button class="big-btn outline" onclick="goTo('question'); jumpToQuestion(0);">やり直す</button>
+    </div>
+
+    <!-- 集計画面 -->
+    <div class="screen" id="screen-tally">
+      <div class="nav-row"><span class="home-icon-btn" onclick="goTo('home')">← ホームに戻る</span></div>
+      <div id="tally-content"></div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const WHO5_QUESTIONS = [
+  "明るく、楽しい気分で過ごした",
+  "落ち着いた、リラックスした気分で過ごした",
+  "意欲的で、活動的に過ごした",
+  "ぐっすりと休め、気持ちよく目覚めた",
+  "日常生活の中に、興味のあることがたくさんあった"
+];
+const WHO5_OPTIONS = [
+  {label:"いつも", score:5},
+  {label:"ほとんどいつも", score:4},
+  {label:"半分以上の期間を", score:3},
+  {label:"半分以下の期間を", score:2},
+  {label:"ほんのたまに", score:1},
+  {label:"まったくない", score:0}
+];
+
+let residents = ["道志花子"];
+let records = [];
+let settings = null; // { startYear, startMonth }
+
+let current = { residentName:null, implYear:null, implMonth:null, yearIndex:null, answers:[] };
+let qIndex = 0;
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=> t.classList.remove('show'), 1800);
+}
+
+/* ▼コード（アプリの入口の合言葉）はここを施設で決めたものに変更してください▼ */
+const APP_PASSCODE = "doushikai2025";
+/* ▲ここまで▲ */
+
+/* ▼データの保存先（Google Apps ScriptのウェブアプリURL）をここに貼り付けてください▼ */
+const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbxUT-xK0Ltb1ENjq2l-4qBGJMT9bk1cO-sSgHOKEdJt690VMtpAdjkEZeoaPyQiC04x/exec";
+/* ▲ここまで▲ */
+
+async function kvGet(key){
+  try{
+    const res = await fetch(SHEET_API_URL + '?key=' + encodeURIComponent(key));
+    const data = await res.json();
+    return (data && data.value !== undefined) ? data.value : null;
+  }catch(e){ console.error('読み込みに失敗しました', e); return null; }
+}
+async function kvSet(key, value){
+  try{
+    await fetch(SHEET_API_URL, {
+      method: 'POST',
+      body: JSON.stringify({ key: key, value: value })
+    });
+  }catch(e){ console.error('保存に失敗しました', e); }
+}
+
+async function loadData(){
+  const r = await kvGet('who5_residents');
+  if(r){ try{ residents = JSON.parse(r); }catch(e){} }
+  const rec = await kvGet('who5_records');
+  if(rec){ try{ records = JSON.parse(rec); }catch(e){} }
+  const s = await kvGet('who5_settings');
+  if(s){ try{ settings = JSON.parse(s); }catch(e){} }
+  renderResidentList();
+  populateSettingSelectors();
+}
+
+async function saveResidents(){ await kvSet('who5_residents', JSON.stringify(residents)); }
+async function saveRecords(){ await kvSet('who5_records', JSON.stringify(records)); }
+async function saveSettingsToStorage(){ await kvSet('who5_settings', JSON.stringify(settings)); }
+
+/* ---------- コード入力（ロック画面） ---------- */
+(function(){
+  const lockScreen = document.getElementById('lockScreen');
+  const appContent = document.getElementById('appContent');
+  const passInput = document.getElementById('passcodeInput');
+  const errorBox = document.getElementById('lockError');
+
+  function unlock(){
+    lockScreen.style.display = 'none';
+    appContent.style.display = 'block';
+    loadData();
+  }
+
+  if(sessionStorage.getItem('who5AppUnlocked') === '1'){
+    unlock();
+  }
+
+  function tryUnlock(){
+    if(passInput.value === APP_PASSCODE){
+      sessionStorage.setItem('who5AppUnlocked', '1');
+      unlock();
+    }else{
+      errorBox.textContent = 'コードが違います。';
+      passInput.value = '';
+      passInput.focus();
+    }
+  }
+  document.getElementById('unlockBtn').addEventListener('click', tryUnlock);
+  passInput.addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){ tryUnlock(); }
+  });
+})();
+
+function goTo(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+}
+
+/* ---------- 設定（算定開始年月） ---------- */
+function populateSettingSelectors(){
+  const yearSel = document.getElementById('set-year');
+  const monthSel = document.getElementById('set-month');
+  const thisYear = new Date().getFullYear();
+  yearSel.innerHTML = '';
+  for(let y = thisYear - 5; y <= thisYear + 5; y++){
+    const opt = document.createElement('option');
+    opt.value = y; opt.textContent = y + '年';
+    yearSel.appendChild(opt);
+  }
+  monthSel.innerHTML = '';
+  for(let m = 1; m <= 12; m++){
+    const opt = document.createElement('option');
+    opt.value = m; opt.textContent = m + '月';
+    monthSel.appendChild(opt);
+  }
+  if(settings){
+    yearSel.value = settings.startYear;
+    monthSel.value = settings.startMonth;
+  }else{
+    yearSel.value = thisYear;
+    monthSel.value = new Date().getMonth()+1;
+  }
+}
+function openSettings(){ populateSettingSelectors(); goTo('settings'); }
+async function saveSettings(){
+  const y = parseInt(document.getElementById('set-year').value, 10);
+  const m = parseInt(document.getElementById('set-month').value, 10);
+  settings = { startYear:y, startMonth:m };
+  await saveSettingsToStorage();
+  showToast('設定を保存しました');
+  goTo('home');
+}
+
+/* ---------- 年度計算 ---------- */
+function yearIndexOf(y, m){
+  if(!settings) return null;
+  const monthsSince = (y - settings.startYear) * 12 + (m - settings.startMonth);
+  return Math.floor(monthsSince / 12) + 1;
+}
+function yearLabelOf(yearIndex){
+  if(!settings) return '';
+  const startTotal = (settings.startYear * 12 + (settings.startMonth - 1)) + (yearIndex - 1) * 12;
+  const endTotal = startTotal + 11;
+  const sy = Math.floor(startTotal / 12), sm = (startTotal % 12) + 1;
+  const ey = Math.floor(endTotal / 12), em = (endTotal % 12) + 1;
+  return '第' + yearIndex + '年度（' + sy + '年' + sm + '月〜' + ey + '年' + em + '月）';
+}
+
+/* ---------- 利用者選択 ---------- */
+function renderResidentList(){
+  const wrap = document.getElementById('resident-list');
+  wrap.innerHTML = '';
+  residents.forEach(name=>{
+    const btn = document.createElement('button');
+    btn.className = 'big-btn';
+    btn.textContent = name;
+    btn.onclick = ()=>{
+      current = { residentName:name, implYear:null, implMonth:null, yearIndex:null, answers:[] };
+      goTo('implmonth');
+      openImplMonthScreen();
+    };
+    wrap.appendChild(btn);
+  });
+}
+function addResident(){
+  const input = document.getElementById('new-resident-input');
+  const val = input.value.trim();
+  if(!val) return;
+  if(!residents.includes(val)){ residents.push(val); saveResidents(); renderResidentList(); }
+  input.value = '';
+}
+
+function startNewEntry(){
+  if(!settings){
+    showToast('先に「算定開始年月」を設定してください');
+    openSettings();
+    return;
+  }
+  goTo('resident');
+}
+
+/* ---------- 実施年月選択 ---------- */
+function openImplMonthScreen(){
+  document.getElementById('im-resident-name').textContent = current.residentName;
+  const yearSel = document.getElementById('im-year');
+  const monthSel = document.getElementById('im-month');
+  const thisYear = new Date().getFullYear();
+  yearSel.innerHTML = '';
+  for(let y = settings.startYear; y <= thisYear + 5; y++){
+    const opt = document.createElement('option');
+    opt.value = y; opt.textContent = y + '年';
+    yearSel.appendChild(opt);
+  }
+  monthSel.innerHTML = '';
+  for(let m = 1; m <= 12; m++){
+    const opt = document.createElement('option');
+    opt.value = m; opt.textContent = m + '月';
+    monthSel.appendChild(opt);
+  }
+  const now = new Date();
+  yearSel.value = now.getFullYear();
+  monthSel.value = now.getMonth()+1;
+  updateImplYearLabel();
+  yearSel.onchange = updateImplYearLabel;
+  monthSel.onchange = updateImplYearLabel;
+}
+function updateImplYearLabel(){
+  const y = parseInt(document.getElementById('im-year').value, 10);
+  const m = parseInt(document.getElementById('im-month').value, 10);
+  const yi = yearIndexOf(y, m);
+  const label = document.getElementById('im-year-label');
+  if(yi < 1){
+    label.textContent = '※算定開始年月より前の年月です';
+  }else{
+    label.textContent = yearLabelOf(yi);
+  }
+}
+function confirmImplMonth(){
+  const y = parseInt(document.getElementById('im-year').value, 10);
+  const m = parseInt(document.getElementById('im-month').value, 10);
+  current.implYear = y;
+  current.implMonth = m;
+  current.yearIndex = yearIndexOf(y, m);
+  current.answers = [];
+  qIndex = 0;
+  goTo('question');
+  renderQuestion();
+}
+
+/* ---------- 質問画面 ---------- */
+function renderQuestion(){
+  document.getElementById('q-progress-text').textContent = (qIndex+1) + ' / ' + WHO5_QUESTIONS.length + '問';
+  document.getElementById('q-progress-bar').style.width = ((qIndex)/WHO5_QUESTIONS.length*100) + '%';
+  document.getElementById('q-text').innerHTML = WHO5_QUESTIONS[qIndex] + '<span class="sub">最近2週間の様子に、最も近いものを選んでください</span>';
+  const opts = document.getElementById('q-options');
+  opts.innerHTML = '';
+  WHO5_OPTIONS.forEach(opt=>{
+    const btn = document.createElement('button');
+    btn.className = (current.answers[qIndex] === opt.score) ? 'big-btn selected' : 'big-btn outline';
+    btn.textContent = opt.label;
+    btn.onclick = ()=>{
+      current.answers[qIndex] = opt.score;
+      if(qIndex < WHO5_QUESTIONS.length - 1){ qIndex++; renderQuestion(); }
+      else{ showConfirm(); }
+    };
+    opts.appendChild(btn);
+  });
+}
+function jumpToQuestion(i){ qIndex = i; renderQuestion(); }
+function prevQuestion(){
+  if(qIndex > 0){ qIndex--; renderQuestion(); }
+  else{ goTo('implmonth'); }
+}
+
+/* ---------- 確認・保存 ---------- */
+function showConfirm(){
+  const total = current.answers.reduce((a,b)=>a+b, 0);
+  document.getElementById('c-name').textContent = current.residentName;
+  document.getElementById('c-implymonth').textContent = current.implYear + '年' + current.implMonth + '月';
+  document.getElementById('c-yearlabel').textContent = current.yearIndex >= 1 ? yearLabelOf(current.yearIndex) : '（算定開始前）';
+  document.getElementById('c-score25').textContent = total;
+  goTo('confirm');
+}
+async function saveRecord(){
+  const total = current.answers.reduce((a,b)=>a+b, 0);
+  records.push({
+    id: Date.now(),
+    residentName: current.residentName,
+    implYear: current.implYear,
+    implMonth: current.implMonth,
+    yearIndex: current.yearIndex,
+    total: total,
+    date: new Date().toISOString().slice(0,10)
+  });
+  await saveRecords();
+  showToast('保存しました');
+  goTo('home');
+}
+
+/* ---------- 集計画面 ---------- */
+function renderTally(){
+  const wrap = document.getElementById('tally-content');
+  const validRecords = records.filter(r => Number.isFinite(r.yearIndex) && r.yearIndex >= 1);
+  if(validRecords.length === 0){
+    wrap.innerHTML = '<div class="empty-note">まだ調査結果がありません。<br>「新しく入力する」から調査を始めてください。</div>';
+    return;
+  }
+  const skipped = records.length - validRecords.length;
+  records = validRecords;
+  const yearIndices = Array.from(new Set(records.map(r=>r.yearIndex))).sort((a,b)=>a-b);
+  const yearLabels = yearIndices.map(yi => '第' + yi + '年度');
+
+  // ① 利用者ごとの年度推移
+  const byResident = {};
+  records.forEach(r=>{
+    if(!byResident[r.residentName]) byResident[r.residentName] = {};
+    // 同じ利用者・同じ年度に複数件あれば最新のものを採用
+    const existing = byResident[r.residentName][r.yearIndex];
+    if(!existing || r.id > existing.id){ byResident[r.residentName][r.yearIndex] = r; }
+  });
+
+  let html1 = '<div class="table-scroll"><table><thead><tr><th style="text-align:left;">利用者</th>';
+  yearLabels.forEach(l => html1 += '<th>' + l + '</th>');
+  html1 += '</tr></thead><tbody>';
+  Object.keys(byResident).forEach(name=>{
+    html1 += '<tr><td class="name">' + name + '</td>';
+    yearIndices.forEach(yi=>{
+      const rec = byResident[name][yi];
+      html1 += '<td>' + (rec ? rec.total + '点' : '―') + '</td>';
+    });
+    html1 += '</tr>';
+  });
+  html1 += '</tbody></table></div>';
+
+  // ② 施設全体の年度別平均
+  let html2 = '<div class="table-scroll"><table><thead><tr><th>年度</th><th>対象人数</th><th>平均点</th></tr></thead><tbody>';
+  yearIndices.forEach(yi=>{
+    const list = records.filter(r=>r.yearIndex === yi);
+    // 同一利用者が同一年度に複数回入力されている場合は最新値のみで平均
+    const latestByName = {};
+    list.forEach(r=>{
+      const ex = latestByName[r.residentName];
+      if(!ex || r.id > ex.id){ latestByName[r.residentName] = r; }
+    });
+    const vals = Object.values(latestByName).map(r=>r.total);
+    const avg = vals.length ? (vals.reduce((a,b)=>a+b,0) / vals.length) : 0;
+    html2 += '<tr><td>' + yearLabelOf(yi) + '</td><td>' + vals.length + '名</td><td>' + avg.toFixed(1) + '点</td></tr>';
+  });
+  html2 += '</tbody></table></div>';
+
+  let noteHtml = '';
+  if(skipped > 0){
+    noteHtml = '<div class="note-box">以前の形式で保存されていたデータ ' + skipped + ' 件は、年度情報がないため表示から除外し、保存領域からも削除しました。</div>';
+    saveRecords();
+  }
+
+  wrap.innerHTML = noteHtml +
+    '<div class="section-title">①利用者ごとの年度推移（0〜25点）</div>' + html1 +
+    '<div class="section-title">②施設全体の年度別平均（0〜25点）</div>' + html2;
+}
+</script>
+</body>
+</html>
